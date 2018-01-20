@@ -1,0 +1,133 @@
+CIS 4930
+HW 1
+
+Write Up Warm Up
+https://github.com/RandomsCTF/write-ups/tree/master/Hack.lu%20CTF%202015/GuessTheNumber%20%5Bppc%5D%20(150)
+
+1. The problem statement for this challenge was easy to understand. The only thing I had to question was what a LCG was.
+   After this was explained further on in the solution part of the write-up, the problem made sense.
+2. I think I could have solved the question with knowledge of the LCG formula. It looks like that part requires a bit
+   of research to find the fine details about how it works.
+3. The author's grammar was good. I did not notice anything that was indistinguishable.
+4. The author of this write up wrote very clearly. To me, it read like a tutorial. Every step of the solution was explained
+   in detail. You could follow this write up word for word and come up with the solution with zero guesswork.
+5. The thought process of the author was well-detailed except for how they got the numbers for the LCG formula. The write up
+   did state that the numbers came from wikipedia though.
+6. I still think I could have solved this problem with enough understanding of the LCG from wikipedia and more knowledge about
+   Python classes.
+7. Python: socket, time
+
+Change Machine
+FLAG: flag{5t4cks_0n_5t4cks}
+Solution: I started out using the socket library to make a CTFSocket class similar to the one used in the above write up. This class was modified to send new lines as required by the change machine. The rest of the logic runs in a while loop that continues until the flag is found. The Decimal library was used to do the math because floating point arithmetic gave me inaccurate results. This is due to the rounding python does with floating points. A count variable was included to see how many rounds of change had to be completed before the flag was obtained.
+
+import socket
+from decimal import Decimal
+
+class CTFSocket():
+	def __init__(self, host, port):
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.socket.connect((host, port))
+	def read(self):
+		return self.socket.recv(4096)
+	def send(self, message):
+		return self.socket.send(str(message) + "\n")
+
+conn = CTFSocket("practice.n0l3ptr.com", 8889)
+count = 1
+while(True):
+	read = conn.read()
+	print "Read: " + read
+	if(count == 1):
+		target = read[1:5]
+	else:
+		target = read[len('correct!\n$'):-len('\n$10,000 bills:\n')]
+	print "Target: " + target
+	target = Decimal(target)
+
+	bills_10k = target / 10000
+	target = target % 10000
+	bills_5k = target / 5000
+	target = target % 5000
+	bills_1k = target / 1000
+	target = target % 1000
+	bills_500 = target / 500
+	target = target % 500
+	bills_100 = target / 100
+	target = target % 100
+	bills_50 = target / 50
+	target = target % 50
+	bills_20 = target / 20
+	target = target % 20
+	bills_10 = target / 10
+	target = target % 10
+	bills_5 = target / 5
+	target = target % 5
+	bills_1 = target / 1
+	target = target % 1
+	cents_50 = target / Decimal('0.50')
+	target = target % Decimal('0.50')
+	cents_25 = target / Decimal('0.25')
+	target = target % Decimal('0.25')
+	cents_10 = target / Decimal('0.10')
+	target = target % Decimal('0.10')
+	cents_5 = target / Decimal('0.05')
+	target = target % Decimal('0.05')
+	cents_1 = target / Decimal('0.01')
+
+	conn.send(int(bills_10k))
+	print conn.read()
+	conn.send(int(bills_5k))
+	print conn.read()
+	conn.send(int(bills_1k))
+	print conn.read()
+	conn.send(int(bills_500))
+	print conn.read()
+	conn.send(int(bills_100))
+	print conn.read()
+	conn.send(int(bills_50))
+	print conn.read()
+	conn.send(int(bills_20))
+	print conn.read()
+	conn.send(int(bills_10))
+	print conn.read()
+	conn.send(int(bills_5))
+	print conn.read()
+	conn.send(int(bills_1))
+	print conn.read()
+	conn.send(int(cents_50))
+	print conn.read()
+	conn.send(int(cents_25))
+	print conn.read()
+	conn.send(int(cents_10))
+	print conn.read()
+	conn.send(int(cents_5))
+	print conn.read()
+	conn.send(int(cents_1))
+
+	count = count + 1
+
+Robots
+FLAG: flag{4s1m0v_w0uld_b3_pr0ud}
+Question 1: The sentence "We have figured out that they have encoded messages by indexing into a string of characters and performing an xor then shift on that index" means that the robots are encoding plaintext messages. They are doing this by getting an index, or number, from a base string. That number has the xor and shift operations done on it to produce the encoded output. This operation is done for every character in the message to be encoded.
+Question 2: The code snippet for the encode() function is a for loop that runs for every character of the codestr. First it gets the index of the character within basestr. It takes that index and does an xor, then a shift, and finally a mod operation. The final number from this process is used as a secondary index into basestr and that becomes the new encoded character. This is the same explanation as the previous question.
+Solution: This problem was a little more tricky. On the surface, the encode function looks easy to reverse for decode. However the xor and shift variables remain unknown throughout the problem. The mod 64 at the end of the encode function does not necessarily mean xor and shift are between 0 and 63. That modulus just ensures the final result is within the range of basestr. So, xor and shift could be any arbitrary numbers. To account for that in the decode function, the xor and shift variables are modded by 64 before being used. My solution only tests xor and shift values between 0 and 63 but they don't need to be. Once I got the decode function working I started with the same socket and CTFSocket class I used for the previous problem. This retrieved the basestr and codestr needed to decode. However, since I did not know the xor and shift values being used I had to guess. The nested for loops produced about 8000 lines of output. After noticing the decode value always contained the word "robot" I took the manual route. I removed the socket communication entirely and just used netcat to get the basestr and codestr values. I filled in those variables for each run and decoded the text. That way, I could find the word "robot" in the out.txt file easily. Luckily, this problem only had 3 rounds to complete before getting the flag.
+
+def encode(codestr, xor, shift):
+	return [basestr[((basestr.index(s)^xor)+shift)%64] for s in codestr]
+
+def decode(codestr, xor, shift):
+	xor = xor % 64
+	shift = shift % 64
+	return [basestr[((basestr.index(s)%64)-shift)^xor] for s in codestr]
+
+basestr = ""
+codestr = ""
+
+output = open('out.txt', 'w')
+for i in range(0, 64):
+	for k in range(0, 64):
+		output.write(''.join(decode(codestr, i, k)) + "\n")
+		if(i != k):
+			output.write(''.join(decode(codestr, k, i)) + "\n")
+output.close()
