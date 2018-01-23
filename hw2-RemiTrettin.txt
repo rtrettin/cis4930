@@ -4,44 +4,62 @@ HW 2
 
 URL Encoding
 FLAG: flag{h1d1ng_1n_pl41n_s1t3}
-Solution: explain
+Solution: Python includes a library called urllib that allows this problem to be done very quickly. Once that library is imported, simply use the decode function on the URL-encoded string to retrieve the plaintext.
 
-code
+import urllib
+
+url = '%66%6c%61%67%7b%68%31%64%31%6e%67%5f%31%6e%5f%70%6c%34%31%6e%5f%73%31%74%33%7d'
+
+print urllib.unquote(url).decode('utf8')
 
 Base64
 FLAG: flag{a11_y0ur_b4s3_R_b3l0ng_2_Us}
-Solution: explain
+Solution: Python can work with base64 out of the box without any imports at all. First I tried running the base64 decode once on the string to ensure there was no error. Then I used a while loop to perform the decode multiple times until the substring 'flag' was found in the result. This substring indicates the base64 is fully decoded and the flag was found.
 
-code
+string = 'Vm0xd1NtUXlWa1pPVldoVFlUSlNjRlJVVGtOamJGWnhVMjA1VlUxV2NIbFdiVEZIWVZaYWRW RnNhRmRXTTFKUVZrZDRXbVF3TlZsalJsWk9WakZLTmxaclVrZFVNVXB5VFZaV1dHSkhhRlJW YkZwM1ZGWlplVTFVVW1wTmF6VllWbGMxVjFaWFJqWldiRkpoVmpOb2FGUldXbHBrTWtaSldr WlNUbGRGU2paV2FrbzBZekZhV0ZKdVVtcGxiWE01'
+result = ''
+
+while(True):
+    result = string.decode('base64')
+    string = result
+    if('flag' in result):
+        print result
+        break
 
 Calculator
 FLAG: flag{you_should_have_solved_this_in_ruby}
-Solution: explain
+Solution: This problem was interesting because of how fast it had to be solved. I used the Python requests library to interract with HTTP (GET, POST). I used the PyQuery library to parse the HTML I needed to extract from the GET request to complete the arithmetic expression. My first attempt at sending the final POST with the answer did not work because I did not include the PHP Session ID as a cookie in my POST request. Once I stored and sent that, I was able to get the flag.
 
-code
+import requests
+from pyquery import PyQuery
+
+url = 'http://ctf.hackucf.org:4000/calc/calc.php'
+r = requests.get(url)
+if(r.status_code == 200):
+    cookie = r.headers['Set-Cookie']
+    html = r.text
+    pq = PyQuery(html)
+    tag = pq('expression')
+    text = tag.text().replace('\n', ' ')
+    print text
+    result = eval(text)
+    print result
+    headers = {"Cookie": cookie}
+    p = requests.post(url, data={'answer': str(result)}, headers=headers)
+    print p.text
 
 SQL Challenge
 FLAG: flag{pr377y_345y_w17h_7h3_$0urc3_c0d3_huh?}
-Solution: used postman
-sent POST http://67.207.89.115:8080/WebI/sqlchallenge.php?iamahacker=true&debug=true
-	username = ' OR '1'='1
-	password = ' OR '1'='1
+Solution: This problem is difficult to complete with just a web browser. I used a Chrome app called Postman to complete this. Postman allows you to view raw HTTP responses and send raw HTTP requests without dealing with the UI. I reviewed the source code and noticed the first two steps required sending certain parameters in the HTTP request. I ending up sending POST http://67.207.89.115:8080/WebI/sqlchallenge.php?iamahacker=true&debug=true with the following payload {"username":"' OR '1'='1", "password":"' OR '1'='1"}. The values for the username and password keys include careful quotations to ensure the SQL statement is formatted correctly.
 
 Profile I
 FLAG: flag{l0c4l_f1l3_in7rus10n_3xpl0173d!}
-Solution: used browser
-changed index.php?page=home to index.php?page=../../flag
+Solution: I noticed this problem was designed to show an example of local file inclusion because of the original URL format of index.php?page=home. I completed this problem by just using my browser and sending GET requests until I got the flag. The correct URL was index.php?page=../../flag. Before trying that one, I tried various others including:
+- index.php?page=../../flag.php%00php
+- index.php?page=../../flag.php%00
+- index.php?page=../../flag%00
+...and many others.
 
 Top Hackers
 FLAG: flag{y0u_d1d_n07_d0_7h47_By_h4nD_D1d_y0U?}
-Solution: view source of tophackers.php
-noticed trinity.jpg was hidden
-viewed the image, appeared as nothing
-used postman to GET the image
-viewed response headers that showed large content-length
-downloaded the "image"...probably not an image
-opened image in text editor, contained base64
-decoded base64
-contained obnoxious javascript function
-pasted function into browser JS console
-ran function, got flag
+Solution: I did this problem manually and I'm glad I did because it would have taken longer to make a script to do it for me. Upon first glance, the tophackers.php page looked normal. I quickly scanned the source code and didn't notice anything the first time. I spent more time just looking at it and I noticed one of the images was in a hidden div (trinity.jpg). I tried to view that image in my browser but it appeared as a transparent square. I thought it was nothing so I went back to the source. This hidden div was the only anomaly I could find so I thought this trinity.jpg had to be something. I went back to the Postman app and sent a GET request to the image. The response headers indicated a large content-length of the image so there was something there and it wasn't as empty as it looked at first. I downloaded the image to see what else I could do with it. I ran the command "file trinity.jpg" to find out it wasn't really an image. The file utility told me it was full of ASCII text. I opened the image in a text editor and thought the ASCII looked like base64. I decoded the base64 text and found an obnoxious javascript function called printFlag(). I pasted this in my browser's JS console then ran the function. My browser console printed out the flag for me as expected. I liked the multistep approach that this problem required to solve.
