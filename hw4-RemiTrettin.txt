@@ -1,0 +1,49 @@
+Remi Trettin
+CIS4930
+HW 4
+
+Fought The Law
+FLAG: flag{CR1M3DOE5N7P4Y}
+Solution: audacity look at sound pattern
+-.-. .-. .---- -- ...-- -.. --- . ..... -. --... .--. ....- -.-- morse code
+decode to flag
+
+RTFPPTX
+FLAG: flag{ReadingRainbow}
+Solution: base64 MHgwNjB4MEEweDBEMHgxNjB4MTgweDIyMHgyODB4MkYweDMyMHgzNjB4MzkweDNFMHg0MTB4NDQ=
+decode gives hex
+0x06 0x0A 0x0D 0x16 0x18 0x22 0x28 0x2F 0x32 0x36 0x39 0x3E 0x41 0x44
+R    e    a    d    i    n    g    R    a    i    n    b    o    w
+hex to decimal
+noticed bold/underline characters in slides
+tried matching decimal numbers to slide numbers, worked out
+
+BrokenFlag
+FLAG: flag{n0th1n_115_45_11t_533m5}
+Solution: file BrokenFlag.txt
+BrokenFlag.txt: gzip compressed data, last modified: Mon Jan 15 19:18:37 2018, from Unix
+tar zxvf BrokenFlag.txt
+gives exact_copy01 and exact_copy02
+run file on each
+bzip2 -d exact_copy02 works, gives junk2
+xxd junk2, see beginning of flag
+vbindiff exact_copy01 exact_copy02
+extract diff in exact_copy01, use hex to ascii, looks like part of the flag
+5F 31 31 35 5F 34 35 5F 31 31 74 5F
+_115_45_11t_
+got confused, i'm missing a piece of the puzzle
+xxd BrokenFlag.txt, saw the last piece of the flag
+joined it all together
+
+Cyberdog Ate The Cyberhomework
+FLAG: flag{gooddoggie}
+Solution: opened image file in FTK Imager
+found Flag.docx in the trash
+file Flag.docx, really is a word document but no flag within
+extracted files from Flag.docx
+grabbed image1.jpg from Flag/word/media directory
+file image1.jpg, actually a png, i changed it, but probably didn't matter
+used xxd, nothing obvious there
+opened it, saw it was a QR code, decoded using online tool
+got base64 ZmxhZ3s5ZWJkNDcxODM0N2UzODlhYWEyYTMyNDE2MjRhZmIxNX0= then decoded that
+got flag{9ebd4718347e389aaa2a3241624afb15} then used crackstation website to crack md5 hash 9ebd4718347e389aaa2a3241624afb15 for flag
