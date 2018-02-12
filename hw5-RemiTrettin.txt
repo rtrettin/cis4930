@@ -1,0 +1,96 @@
+Remi Trettin
+CIS4930
+HW 5
+
+In Ur Reddit Crackin Ur Passwds
+FLAG: flag{hunter2}
+Solution: I did some research on the passwd file and realized '$1$$' indicates that MD5 was used to store the passwords. The trailing '==' on each password indicates a base64 encoding. This seemed like a common scheme that linux uses/used so I just used john the ripper to find plaintext that matched the passwd file hashes.
+
+spez shill
+daniel password
+spladug yee
+neil hunter2
+neal secret
+sam dog
+neel cat
+kneel fish
+kevin garbage
+kavin computer
+kovin fish2
+powerlanguage eggdog
+robin bird
+justin case
+
+Bobby Bowden Is Still Topical, Right?
+FLAG: flag{venerable}
+Solution: I used the Volatility python tool to complete this task. To find out which memory profile to use, I ran:
+
+python vol.py -f memory_fun.raw imageinfo
+
+INFO    : volatility.debug    : Determining profile based on KDBG search...
+          Suggested Profile(s) : Win2008SP2x64, VistaSP2x64, VistaSP1x64, Win2008SP1x64
+                     AS Layer1 : WindowsAMD64PagedMemory (Kernel AS)
+                     AS Layer2 : FileAddressSpace (/Users/rtrettin/Documents/cis4930/hw5/memory_fun.raw)
+                      PAE type : No PAE
+                           DTB : 0x124000L
+                          KDBG : 0xf80001780f20L
+          Number of Processors : 1
+     Image Type (Service Pack) : 2
+                KPCR for CPU 0 : 0xfffff80001782500L
+             KUSER_SHARED_DATA : 0xfffff78000000000L
+           Image date and time : 2017-03-20 18:50:44 UTC+0000
+     Image local date and time : 2017-03-20 11:50:44 -0700
+
+This returned multiple suggestions but I chose to use the first one. I wanted to use the hashdump plugin for Volatility so I had to install PyCrypto to enable that. Once finished, I ran:
+
+python vol.py -f memory_fun.raw --profile=Win2008SP2x64 hashdump
+
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:328727b81ca05805a68ef26acb252039:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+bbowman:1000:aad3b435b51404eeaad3b435b51404ee:e83718c79607a3cc58c5b91b6ee3b80e:::
+
+This gave me the password hashes for the bbowman user.
+
+bbowman LM hash: aad3b435b51404eeaad3b435b51404ee
+bbowman NTLM hash: e83718c79607a3cc58c5b91b6ee3b80e
+
+I used the CrackStation website to find the plaintext for these and got the flag.
+
+Dank Memes and Broken Dreams
+FLAG: flag{4m_11_l33t_Y3t}
+Solution: I guessed this task involved file carving. The first thing I did was use binwalk on the .stash file:
+
+binwalk -e dank_meme.stash
+
+This extracted all the compressed image files hidden in the .stash.
+
+hero.jpg
+neo.jpg
+fbi.jpg
+source.jpg
+hacker.password.jpg
+l33t.png
+soylent.jpg
+
+However, the signature output from binwalk showed other images not included in a zip file. To extract those from the .stash file I used foremost:
+
+foremost -t jpg -i dank_meme.stash
+
+This returned 4 additional jpg files. None of the jpg files seemed to contain anything interesting in the actual image or in the hex. However, the l33t.png file was the odd one out. Opening the file gave me nothing and the hex looked like garbage. I was stuck at this point. I went back to the jpg files to see if I missed anything but then I went back to the Forensics I slides and remembered the XOR example. I did the following XOR operation to find the key:
+
+PNG file header               l33t.png file header
+89504e470d0a1a0a     XOR      9a675d701e3d093d            = 1337133713371337
+
+I thought that result looked a little familiar. I borrowed the XOR decrypt python script example and changed the key to 1337.
+
+[hw5-xordecrypt.py]
+
+The result of that operation gave me a valid png file which I could simply open and retrieve the flag.
+
+Unsolved Equation Group
+FLAG: flag{74573_Y0u_c4N_533}
+Solution: I opened the pcap file in Wireshark and used the conversation statistics to see a summary of the traffic and where it was going. I noticed the conversation between 192.168.1.111 and 192.168.1.112 was much larger than anything else (> 200MB). I applied a filter in Wireshark to only show traffic for those IPs. Then I just followed that TCP stream and saved the output as a hex file. I noticed the ASCII ended in '=' so I tried using a base64 decoder and it surprisingly worked. The decoded data was a jpg file. Opening it gave me nothing but xxd gave me something. I noticed a strange hex string embedded in the image:
+
+0x66 0x6c 0x61 0x67 0x7b 0x37 0x34 0x35 0x37 0x33 0x5f 0x59 0x30 0x75 0x5f 0x63 0x34 0x4e 0x5f 0x35 0x33 0x33 0x7d
+
+I copied that and did a hex to ASCII conversion to get the flag.
