@@ -1,0 +1,56 @@
+Remi Trettin
+CIS4930
+HW 6
+
+Install the Tools!
+FLAG: flag{R3_w33k_0n3}
+Solution:
+
+[hw6-tools.png]
+
+Journal
+FLAG: flag{3asy_p0int5}
+Solution:
+
+1. DEC = decrement by 1
+2. HLT = enter halt state
+3. INC = increment by 1
+4. NEG = two's complement negation
+5. IN = input from port
+6. OUT = output to port
+7. ROL = rotate left
+8. ROR = rotate right
+9. LOOP = loop control
+10. IMUL = signed multiplication
+
+.bss
+FLAG: flag{did_y0u_us3_strings}
+Solution: First I used the file command to ensure the binary could be run on Linux and that it was x86. I used strings to see if the flag was easy to find but there were too many possibilities there. I opened the binary in r2 and used "izz" to show the strings and which section they were in. I noticed two of the three potential flag values were in the .data and .rodata sections so those were not it. The last flag was not explicitly in the .bss section but that had to be it.
+
+.data
+FLAG: flag{pl3as3_d0nt_gue$$}
+Solution: I used the same method to solve this task. Only one potential flag appeared in the .data section.
+
+.rodata
+FLAG: flag{wh!ch_0n3_is_this}
+Solution: Again, only one potential flag was in the .rodata section.
+
+[hw6-izz.png]
+
+Warm Up
+FLAG: flag{ef15d8edd00a6960c9c16937cbf14212}
+Solution: The binary contained a main function and a for loop construct. I was able to find these via the boxes in the r2 graph view. By analyzing the comparison in the loop and its relationship to the user-provided number I could tell it was a for loop. The binary is calculating the Nth Fibonacci number in the sequence where N is the user input.
+
+[hw6-r2loop.png]
+
+Number
+FLAG: FIT{2.718281828}
+Solution: I used file and strings to verify the type of file I was working with and to make sure nothing obvious stuck out. In r2 I went straight to the main function and graph view. I noticed the if statement construct which determined the output of the program. I converted 0x466 and 0x1A to decimal and reversed the math the program did with those to get 1152 (decimal) as the input to be provided to the program to get the flag.
+
+Got Time?
+FLAG: TAMPA{A$AP_WORLDWIDE}
+Solution: Once again I used file and strings to verify the executable and check for an easy flag in ASCII. Once again strings showed nothing useful. I ran the binary and saw the countdown for 1008 minutes which is about 17 hours. I was not going to wait that long, if it produced the flag at all, so I opened the binary in r2. I seeked to main and saw the countdown conditional. Once the countdown hit 0 the branch went to a xorencrypt function. However, it looked like it was actually decrypting the hex string that was already there.
+
+0x3d 0x61 0x26 0x3e 0x2e 0xc 0x61 0x4c 0x2e 0x27 0x7f 0x23 0x20 0x72 0x39 0x37 0x32 0x69 0x27 0x24 0x9
+
+I seeked to the sym.xorencrypt function and examined that. I saw where it was xor'ing each character. All I had to do was get the key from the function to prevent myself from waiting 17 hours. By following the mov, div, and various other instructions I was able to find the key and come up with the flag.
