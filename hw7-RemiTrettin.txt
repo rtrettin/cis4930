@@ -1,0 +1,55 @@
+Remi Trettin
+CIS4930
+HW 7
+
+More Tools!
+FLAG: flag{R3_w33k_tW0}
+Solution:
+
+[hw7-tools.png]
+
+Journal II
+FLAG: flag{r0und_tw0}
+Solution:
+
+1. AESDEC = one round of AES decryption
+2. AESENC = one round of AES encryption
+3. ANDN = logical AND NOT
+4. CMPS = compare string operands
+5. CPUID = CPU identification
+6. FABS = absolute value
+7. FCOS = cosine
+8. FSIN = sine
+9. LEAVE = high level procedure exit
+10. UD = undefined instruction
+
+Run Me!
+FLAG: flag{y0u_will_b3_a_j3di_Mast3r_0n3_day}
+Solution: This problem was a little more involved that just installing QEMU. I chose to install QEMU from source by qemu-arm did not work out of the box on Ubuntu 16.04. I had to install several ARM utilities along with QEMU such as arm-linux-gnueabi. Then I had to make several symlinks for ARM libraries such as libm, libc, libgcc, libstdc++, etc. in /lib. Once all the symlinks were there for what qemu-arm needed, I was able to run the binary and get the flag.
+
+Got Time? II
+FLAG: TAMPA{A$AP_WORLDWIDE}
+Solution: To solve Got_Time dynamically I opened it in gdb with the pwndbg plugin. I used the "start" command to start at main and set a breakpoint. I stepped through the instructions until the coundown started. I then opened the binary in r2 in order to find the address of the instruction when the timer hit 0. I set the $rip register to that address and stepped through to get the flag.
+
+Arrrrggggggggggs
+FLAG: CTF{Now_th1s_1s_t0_g3t_ANGRyy}
+Solution: I first ran the binary to see what happened. I got the usage string stating how it wanted command line arguments for the flag. I opened the binary in gdb and r2. I noticed the first thing it did was check for 31 arguments before exiting with the usage string. This means that it was looking for 30 arguments for the flag because the first argument is the binary path. I stepped through the binary with arbitrary arguments and noticed it was saving the first character of each byte in an array. The array values were being compared to the following hex values:
+
+51 35 57 5A 9C 42 62 8C 5C 26 AA 3C 1D A1 45 A3 1B 45 93 2B 3B 92 56 2C 43 59 4B 75 7D 7D
+
+These comparisons were done using a chain of if statements. The if statements looked similar except they followed a distinct "add, sub, sub, add, sub, sub" instruction pattern along with reversible arithmetic before each comparison. I used a Python script that followed the pattern and produced the flag.
+
+[hw7-args.py]
+
+This image shows how r2 highlighted the add,sub,sub pattern in the assembly structures.
+
+[hw7-addsubsub.gif]
+
+Focus
+FLAG: flag{V3ry_g00d_j0b_V3ry_gooD_j0b_ind33d}
+Solution: I ran Focus to see what happened. It asks for some type of user input but does not provide what it is looking for. The flag appeared to be encrypted in the file.txt.enc file. I opened Focus in gdb and started at main. I ran through the program there to see what the registers were doing. I also ran through the program without file.txt.enc and the registers showed all 0's so the program was doing something with that file (I also noticed the ifstream calls). I set breakpoints after the 100 round loop in main, in the encryptDecrypt function at 0x401076, and after everything in main but before exiting at 0x401327. I saw part of the flag (flag{V3r) in the registers no matter what the user inputted. I tried various and they did not change the results in the registers. I stepped through encryptDecrypt slowly and saw it xor'd the first 8 bytes of file.txt.enc with 0x514b43. I just guessed that this was the whole key so I swapped the bytes around from little endian so it was readable and extended the key for all the bytes in file.txt.enc as follows:
+
+2d 2f 30 2c 38 07 78 31 28 14 24 61 7b 27 0e 21 73 33 14 15 62 39 3a 0e 2c 2c 3e 0f 1c 3b 7b 21 0e 22 2d 35 78 70 35 36
+4b 43 51 4b 43 51 4b 43 51 4b 43 51 4b 43 51 4b 43 51 4b 43 51 4b 43 51 4b 43 51 4b 43 51 4b 43 51 4b 43 51 4b 43 51 4b
+
+When xor is run on those bytes it produces a readable flag.
