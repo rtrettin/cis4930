@@ -1,0 +1,43 @@
+Remi Trettin
+CIS4930
+HW 8
+
+Install the tools part 3!
+FLAG: flag{f1ag_f1ag_f1ag_f1ag}
+Solution:
+
+[hw8-tools.png]
+
+Journal III
+FLAG: flag{r0und_THR33}
+Solution:
+
+1. AESKEYGENASSIST = AES round key generation
+2. BNDMK = make bounds
+3. BNDCL = check lower bounds
+4. BNDCN = check upper bounds
+5. BNDMOV = move bounds
+6. CLI = clear interrupt flag
+7. FCHS = change sign
+8. FFREE = free floating point register
+9. FIDIVR = reverse divide
+10. JCC = jump if condition met
+
+jUNGLES aRE dANGEROUS
+FLAG: flag{th1s_1s_why_c0mpu73rs_d0n7_h4v3_f33l1ng5}
+Solution: I used file on the file to determine it was a jar. I extracted the class files from the jar. I reviewed the manifest to see which file contained main. Then, I used jad on MoodyNumbers because that is where main was according to the manifest. Reviewing the source showed me that this class just prompted for the numbers and checked equality. The getFlag function was also here but it used AES to decrypt something. I went back and used jad on NumberChecker. This contains 4 functions/rounds which were easily reversed to figure out the numbers it wanted.
+
+happy: 1710131923 (convert hex to decimal, do calculation)
+scary: 2816 (reverse return statement calculation)
+nostalgic: 19800828 (crackstation md5)
+arousing: 69696969 (j,k mods mean they had to be between 0-9; comparisons mean it has to end in 69; the only changes to i are i/10 eight times)
+
+Solve Them All
+FLAG: flag{I_cAn_Pyth0n}
+Solution: I wrote a python script that used pwntools for the number binary. This was done with the process functions to read and write to it during execution. I appended my python script from HW 7 to HW 8 for arrrrrgs. I did not see a need for pwntools here since the flag is not in the binary and is not printed anywhere no matter what args were given. I could not figure out how to use pwntools for Focus. To get the flag you have to read from the stack. This can be done with gdb during execution with x/3s 0x6172f0. I looked at most of the documentation for pwntools and did not see a way of doing that. I did see you could use gdb with pwntools but that seemed to defeat the purpose of automation.
+
+[hw8-solve.py]
+
+Research
+FLAG: flag{I_pr0mis3_I_Did_th3_r3seaRch}
+Solution: This program prints the current buffer and return address twice before exiting. The buffer address changes between each print out. Looking at the program in gdb, it seems to use gets incorrectly. The return address that it prints is read from the stack. This value can be modified to be any other address which could cause an error in the program.
