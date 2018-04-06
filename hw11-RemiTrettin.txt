@@ -1,0 +1,145 @@
+Remi Trettin
+CIS4930
+HW 11
+
+Entropy 1, 2, 3:
+I was not able to solve this set of problems. I tried implementing Shannon entropy in python but the differences in the provided bytes were so minute it didn't make sense. Then, I tried just counting the amount of 0's and 1's and dividing by the total. That worked, but I was not sure what the threshold should be for random or altered random. My script is below.
+
+import socket
+import math
+import time
+
+class CTFSocket():
+	def __init__(self, host, port):
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.socket.connect((host, port))
+	def read(self):
+		return self.socket.recv(4096)
+	def send(self, message):
+		return self.socket.send(str(message) + "\n")
+	def readbig(self, timeout=2):
+		self.socket.setblocking(0)
+		total_data = []
+		data = ''
+		begin = time.time()
+		while True:
+			if(total_data and time.time()-begin > timeout):
+				break
+			elif(time.time()-begin > timeout * 2):
+				break
+			try:
+				data = self.socket.recv(4096)
+				if(data):
+					total_data.append(data)
+					begin = time.time()
+				else:
+					time.sleep(0.1)
+			except:
+				pass
+		return ''.join(total_data)
+	def close(self):
+		return self.socket.close()
+
+conn = CTFSocket("crypto.n0l3ptr.com", 8001)
+
+for i in range(100):
+	data = conn.readbig()
+	sdata = data[:data.find('G')].rstrip()
+
+	binstr = ''.join(format(ord(x), 'b') for x in sdata)
+
+	print "Count: " + str(i)
+	num0 = (binstr.count("0") / float(len(binstr))) * 100
+	num1 = (binstr.count("1") / float(len(binstr))) * 100
+	print "0s: " + str(num0)
+	print "1s: " + str(num1)
+
+	if(num0 < 46.0):
+		conn.send("0") # bad
+	else:
+		conn.send("1") # good
+
+print conn.read() # flag?
+
+conn.close()
+
+4u Substitution Cipher
+FLAG: flag{thisisanexampleplaintextwithagoodfrequency}
+Solution: The most frequent letter in the provided ciphertext was v with a frequency of 5. By using frequency analysis, the decryption mapping becomes:
+
+v = e
+p = t
+a = s
+etc.
+
+This produces the following:
+
+pkcycyszvfsqdovdosczpvfpwcpksxggnabvhevzli
+thisisanexampleplaintextwithagoodfrequency
+
+5u Single Byte XOR
+FLAG: flag{whatagreatplaintexttoobaditdoesnthavemorees}
+Solution: This problem was solved by using frequency analysis and reversing the XOR operation. The provided ciphertext was:
+
+a5 ba b3 a6 b3 b5 a0 b7 b3 a6 a2 be b3 bb bc a6 b7 aa a6 a6 bd bd b0 b3 b6 bb a6 b6 bd b7 a1 bc a6 ba b3 a4 b7 bf bd a0 b7 b7 a1
+
+Frequencies:
+a5 = 1
+ba = 2
+b3 = 6
+a6 = 7
+b5 = 1
+a0 = 2
+b7 = 6
+a2 = 1
+be = 1
+bb = 2
+bc = 2
+aa = 1
+bd = 4
+b0 = 1
+b6 = 2
+a1 = 2
+a4 = 1
+bf = 1
+
+The byte 0xA6 is most frequent with 7. By assuming the letter e equals 0xA6, XOR can be reversed to find the byte used for encryption.
+
+0xA6 XOR 0x65 = 0xC3
+
+Processing that XOR across the entire ciphertext results in the following plaintext: whatagreatplaintexttoobaditdoesnthavemorees
+
+6 Multi Byte XOR
+FLAG: flag{3644DB659DA991}
+Solution: The provided ciphertext was:
+
+851b255efc2f03aa820d2e54fd2a05ac97063b4ffa3108a3
+
+The key for this is probably 8 bytes long because the entropy of an 8 byte key length compared to a 12 byte key length is higher.
+
+----
+
+The provided ciphertext was:
+
+62 2c b2 16 bd c0 e2 16 20 be 03 f4 c7 f8 42 21 b7 1c bd dd f9 53 64 b9 00 ee dd b1 46 28 ba 0c f3 dd f4 4e 30 fb 2c bd c1 f0 40 21 fb 00 eb cc e3 16 27 a9 00 fc dd f4 52 6a fb 32 f5 c8 e5 16 27 b4 10 f1 cd b1 54 21 fb 04 bd cb f4 42 30 be 17 bd d9 fd 57 2d b5 11 f8 d1 e5 09 64 92 45 f9 c6 ff 11 30 fb 11 f5 c0 ff 5d 64 a8 0a bc
+
+I used xortool to determine the key was most likely 7 bytes long for this ciphertext. Then I used cryptanalib to decrypt the message.
+
+import cryptanalib as ca
+
+ciphertext = "622cb216bdc0e21620be03f4c7f84221b71cbdddf95364b900eeddb14628ba0cf3ddf44e30fb2cbdc1f04021fb00ebcce31627a900fcddf4526afb32f5c8e51627b410f1cdb15421fb04bdcbf44230be17bdd9fd572db511f8d1e509649245f9c6ff1130fb11f5c0ff5d64a80abc".decode('hex')
+
+output = ca.break_multi_byte_xor(ciphertext, verbose=True)
+print output[0]
+
+This did not solve it completely. The output was:
+
+Thit is deainitel~ the bbst planntext N have bver crbated. Phat corld be f betteu plainsext? I'don't shink sh!
+
+I just guessed what the missing letters were so it made sense:
+
+This is definitely the best plaintext I have ever created. What could be a better plaintext? I don't think so!
+
+To find the actual key used for encryption/decryption, I converted the plaintext to hex and XOR'd that with the ciphertext hex. Since this was an exercise for multi-byte XOR, the key was repeated.
+
+Key: 36 44 DB 65 9D A9 91

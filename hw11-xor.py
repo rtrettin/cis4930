@@ -1,0 +1,6 @@
+import cryptanalib as ca
+
+ciphertext = "622cb216bdc0e21620be03f4c7f84221b71cbdddf95364b900eeddb14628ba0cf3ddf44e30fb2cbdc1f04021fb00ebcce31627a900fcddf4526afb32f5c8e51627b410f1cdb15421fb04bdcbf44230be17bdd9fd572db511f8d1e509649245f9c6ff1130fb11f5c0ff5d64a80abc".decode('hex')
+
+output = ca.break_multi_byte_xor(ciphertext, verbose=True)
+print output[0]
