@@ -1,0 +1,119 @@
+Remi Trettin
+CIS4930
+HW 12
+
+Feistel 1:
+FLAG: flag{l0w_3ffort_f1ag}
+Solution: I wrote a Python script that runs 10000 times and encrypts the same integer, 8, each time. The script just checks the length of the encrypted output from the oracle to determine if it is real or random. The script takes a long time, about 5 hours, to run because of network delay. If the sleeps were not in there, it would go too fast and read incorrect information. One round of feistel is not sufficient.
+
+import socket
+import time
+
+class CTFSocket():
+	...
+
+conn = CTFSocket("crypto.n0l3ptr.com", 10001)
+print conn.read()
+
+for i in range(10001):
+	conn.send('o')
+	time.sleep(0.5)
+	print conn.read()
+	conn.send('8')
+	time.sleep(0.5)
+	output = conn.read()
+	output = output.split('\n')[0]
+	conn.send('g')
+	time.sleep(0.5)
+	print conn.read()
+	if(len(output) < 16):
+		conn.send('1') #real
+	else:
+		conn.send('0') #random
+	time.sleep(0.5)
+	result = conn.read()
+	if('False' in result):
+		print result
+		break
+	else:
+		print result
+
+conn.close()
+
+Feistel 2:
+Solution: I could not use the same script for this problem as Feistel 1. I wrote a new script that just brute forces the result from the oracle. I could not get the flag using this method because the script would take much longer than 5 hours to complete. However, two rounds of feistel is insufficient too. The feistel structure needs to be run at least for four rounds.
+
+import socket
+import time
+
+class CTFSocket():
+	...
+
+answers = []
+
+while True:
+	conn = CTFSocket("crypto.n0l3ptr.com", 10002)
+	print conn.read()
+
+	for i in range(10001):
+		conn.send('o')
+		time.sleep(0.5)
+		print conn.read()
+		conn.send('8')
+		time.sleep(0.5)
+		output = conn.read()
+		output = output.split('\n')[0]
+		conn.send('g')
+		time.sleep(0.5)
+		print conn.read()
+		if(len(answers) == i):
+			answers.append('1')
+		conn.send(answers[i])
+		time.sleep(0.5)
+		result = conn.read()
+		if('False' in result):
+			answers[i] = '0'
+			print result
+			break
+		else:
+			print result
+
+conn.close()
+
+3u CBC:
+Solution: Not sure how to solve this one.
+
+4u Padding:
+Solution: I started a script to solve this problem. It seems like it would work but I'm not sure where the 0x02 byte comes in to this. The script cycles through 0x00 - 0xFF to find the padding for each byte.
+
+import socket
+import time
+import sys
+
+class CTFSocket():
+	...
+
+conn = CTFSocket("crypto.n0l3ptr.com", 10004)
+conn.read()
+conn.send('u')
+time.sleep(0.5)
+output = "206f732e7572616e646f6d28313629208f793169efcbf025c9c9b1bc2061ff9b"
+known = "580e40195d001b0058018b920f6118d7"
+output = output.split('\n')[0][:-2]
+
+for i in range(256):
+    print str(i)
+    conn.send('d')
+    time.sleep(0.5)
+    hexstr = str(hex(i).split('x')[-1])
+    if(len(hexstr) == 1):
+        conn.send(output + '0' + hexstr + known)
+    else:
+        conn.send(output + hexstr + known)
+    time.sleep(0.5)
+    result = conn.read()
+    if('Incorrect' not in result):
+        print str(hex(i))
+        sys.exit()
+
+conn.close()
